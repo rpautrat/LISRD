@@ -1,0 +1,86 @@
+import warnings
+warnings.filterwarnings(action='once')
+warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+import cv2
+import numpy as np
+import torch
+import torch.nn.functional as func
+
+from ..datasets.utils.homographies import warp_points
+from .pytorch_utils import keypoints_to_grid
+
+
+def keep_true_keypoints(points, H, shape):
+    """ Keep only the points whose warped coordinates by H
+    are still inside shape. """
+    warped_points = warp_points(points, H)
+    mask = ((warped_points[:, 0] >= 0) & (warped_points[:, 0] < shape[0]) &
+            (warped_points[:, 1] >= 0) & (warped_points[:, 1] < shape[1]))
+    return points[mask, :], mask
+
+
+def get_lisrd_desc_dist(descs, meta_descs):
+    """ Get a descriptor distance,
+        weighted by the similarity of meta descriptors. """
+    desc_dists, meta_desc_sims = [], []
+    for i in range(len(descs)):
+        desc_dists.append(2 - 2 * (descs[i][0] @ descs[i][1].t()))
+        meta_desc_sims.append(meta_descs[i][0] @ meta_descs[i][1].t())
+    desc_dists = torch.stack(desc_dists, dim=2)
+    meta_desc_sims = torch.stack(meta_desc_sims, dim=2)
+
+    # Weight the descriptor distances
+    meta_desc_sims = func.softmax(meta_desc_sims, dim=2)
+    desc_dists = torch.sum(desc_dists * meta_desc_sims, dim=2)
+
+    return desc_dists
+
+
+def extract_descriptors(keypoints, descriptors, meta_descriptors, img_size):
+    """ Sample descriptors and meta descriptors at keypoints positions.
+        This assumes a batch_size of 1. """
+    grid_points = keypoints_to_grid(keypoints, img_size)
+
+    # Extract the local descriptors
+    descs = []
+    for k in descriptors.keys():
+        desc = func.normalize(func.grid_sample(descriptors[k], grid_points),
+                              dim=1)[0, :, :, 0].t()
+        descs.append(desc)
+    descs = torch.stack(descs, dim=1)
+
+    # Extract the meta descriptors
+    meta_descs = []
+    for k in meta_descriptors.keys():
+        meta_desc = func.normalize(
+            func.grid_sample(meta_descriptors[k], grid_points),
+            dim=1)[0, :, :, 0].t()
+        meta_descs.append(meta_desc)
+    meta_descs = torch.stack(meta_descs, dim=1)
+
+    return descs, meta_descs
+
+
+def lisrd_matcher(desc1, desc2, meta_desc1, meta_desc2):
+    """ Nearest neighbor matcher for LISRD. """
+    device = desc1.device
+    desc_weights = torch.einsum('nid,mid->nim', (meta_desc1, meta_desc2))
+    del meta_desc1, meta_desc2
+    desc_weights = func.softmax(desc_weights, dim=1)
+    desc_sims = torch.einsum('nid,mid->nim', (desc1, desc2)) * desc_weights
+    del desc1, desc2, desc_weights
+    desc_sims = torch.sum(desc_sims, dim=1)
+    nn12 = torch.max(desc_sims, dim=1)[1]
+    nn21 = torch.max(desc_sims, dim=0)[1]
+    ids1 = torch.arange(desc_sims.shape[0], dtype=torch.long, device=device)
+    del desc_sims
+    mask = ids1 == nn21[nn12]
+    matches = torch.stack([ids1[mask], nn12[mask]], dim=1)
+    return matches
+
+
+def filter_outliers_ransac(kp1, kp2):
+    """ Given pairs of candidate matches, filter them
+        based on homography fitting with RANSAC. """
+    inliers = cv2.findHomography(kp1, kp2, cv2.RANSAC)[1][:, 0].astype(bool)
+    return kp1[inliers], kp2[inliers]

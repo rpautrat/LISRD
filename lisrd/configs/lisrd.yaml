@@ -1,0 +1,59 @@
+data:
+    name: 'mixed_dataset'
+    datasets: ['coco', 'flashes', 'vidit']
+    data_paths: ['~/Documents/datasets/COCO',
+                 '~/Documents/datasets/Multi_illumination_dataset',
+                 '~/Documents/datasets/VIDIT/train']
+    weights: [0.5, 0.25, 0.25]
+    photo_aug: [true, true, true]
+    batch_size: 8
+    test_batch_size: 8
+    sizes:
+        train: 30000
+        val: 500
+        test: 1000
+    seed: 0
+    img_size: [240, 320]
+    compute_sift: true
+    n_kp: 1350
+    photometric_augmentation:
+        enable: true
+        primitives: ['motion_blur']
+        params:
+            random_brightness: {brightness: 0.5}
+            random_contrast: {strength_range: [0.5, 1.5]}
+            additive_gaussian_noise: {stddev_range: [5, 95]}
+            additive_speckle_noise: {prob_range: [0, 0.01]}
+            additive_shade:
+                transparency_range: [-0.8, 0.8]
+                kernel_size_range: [100, 150]
+            motion_blur: {max_kernel_size: 3}
+    warped_pair:
+        no_rot_proba: 0.5
+        params:
+            translation: true
+            rotation: true
+            scaling: true
+            perspective: true
+            scaling_amplitude: 0.2
+            perspective_amplitude_x: 0.2
+            perspective_amplitude_y: 0.2
+            patch_ratio: 0.85
+            max_angle: 1.57
+            allow_artifacts: true
+        valid_border_margin: 3
+model:
+    name: 'lisrd'
+    learning_rate: 0.001
+    desc_size: 128
+    margin: 1
+    freeze_local_desc: false
+    compute_meta_desc: true
+    tile: 3
+    n_clusters: 8
+    meta_desc_dim: 128
+    lambda: 1
+    dist_threshold: 8
+n_iter: 1000000
+validation_interval: 3000
+save_interval: 3000
