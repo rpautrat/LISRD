@@ -11,6 +11,11 @@ The following shows for example matches predicted with LISRD-SIFT that selects d
 
 ### Installation
 
+Clone the repository with its submodule:
+```bash
+git clone --recurse-submodules https://github.com/rpautrat/LISRD.git
+```
+
 We recommend using this code in a Python environment (e.g. venv or conda). The following script installs the necessary requirements and install the repository as a Python package locally:
 ```bash
 make install
