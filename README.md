@@ -51,7 +51,7 @@ python -m lisrd.export_features <path to the folder of images> <name of the mode
 
 The Rotated Day-Night Image Matching (RDNIM) dataset originates from the [DNIM dataset](http://users.umiacs.umd.edu/~hzhou/dnim) and has been augmented with homographic warps with 50% of the images including rotations. The images used for evaluation in the paper are available [here](https://www.polybox.ethz.ch/index.php/s/P89YkZyOfdhmdPN).
 
-Comparison to the state of the art on the RDNIM dataset, using SuperPoint keypoints for all methods:
+Comparison to the state of the art on the RDNIM dataset, using SuperPoint keypoints for all methods and a correctness threshold of 3 pixels:
 
  <table style="width:100%">
   <tr>
@@ -70,75 +70,75 @@ Comparison to the state of the art on the RDNIM dataset, using SuperPoint keypoi
   </tr>
   <tr>
     <td>Root SIFT</td>
-    <td>0.121</td>
-    <td>0.188</td>
-    <td>0.112</td>
-    <td>0.141</td>
-    <td>0.238</td>
-    <td>0.164</td>
+    <td>0.134</td>
+    <td>0.184</td>
+    <td>0.125</td>
+    <td>0.186</td>
+    <td>0.239</td>
+    <td>0.182</td>
   </tr>
   <tr>
     <td>HardNet</td>
-    <td>0.199</td>
-    <td>0.232</td>
-    <td>0.194</td>
-    <td>0.262</td>
-    <td>0.366</td>
-    <td>0.323</td>
+    <td>0.249</td>
+    <td>0.225</td>
+    <td>0.224</td>
+    <td>0.325</td>
+    <td>0.359</td>
+    <td>0.365</td>
   </tr>
   <tr>
     <td>SOSNet</td>
-    <td>0.178</td>
-    <td>0.228</td>
-    <td>0.203</td>
-    <td>0.211</td>
-    <td>0.297</td>
-    <td>0.269</td>
+    <td>0.226</td>
+    <td>0.218</td>
+    <td>0.226</td>
+    <td>0.252</td>
+    <td>0.288</td>
+    <td>0.296</td>
   </tr>
   <tr>
     <td>SuperPoint</td>
-    <td>0.146</td>
-    <td>0.195</td>
     <td>0.178</td>
-    <td>0.182</td>
-    <td>0.264</td>
-    <td>0.255</td>
+    <td>0.191</td>
+    <td>0.214</td>
+    <td>0.235</td>
+    <td>0.259</td>
+    <td>0.296</td>
   </tr>
   <tr>
     <td>D2-Net</td>
-    <td>0.094</td>
-    <td>0.195</td>
-    <td>0.117</td>
+    <td>0.124</td>
+    <td>0.196</td>
     <td>0.145</td>
-    <td>0.259</td>
-    <td>0.182</td>
+    <td>0.195</td>
+    <td>0.265</td>
+    <td>0.218</td>
   </tr>
   <tr>
     <td>R2D2</td>
-    <td>0.170</td>
-    <td>0.175</td>
-    <td>0.162</td>
-    <td>0.196</td>
+    <td>0.190</td>
+    <td>0.173</td>
+    <td>0.180</td>
+    <td>0.229</td>
     <td>0.237</td>
-    <td>0.216</td>
+    <td>0.237</td>
   </tr>
   <tr>
     <td>GIFT</td>
-    <td>0.187</td>
-    <td>0.152</td>
-    <td>0.133</td>
-    <td>0.241</td>
-    <td>0.236</td>
-    <td>0.209</td>
+    <td>0.225</td>
+    <td>0.155</td>
+    <td>0.149</td>
+    <td>0.294</td>
+    <td>0.240</td>
+    <td>0.229</td>
   </tr>
   <tr>
     <td><b>LISRD (ours)</b></td>
-    <td><b>0.253</b></td>
-    <td><b>0.402</b></td>
-    <td><b>0.440</b></td>
-    <td><b>0.297</b></td>
-    <td><b>0.484</b></td>
-    <td><b>0.519</b></td>
+    <td><b>0.318</b></td>
+    <td><b>0.406</b></td>
+    <td><b>0.439</b></td>
+    <td><b>0.391</b></td>
+    <td><b>0.488</b></td>
+    <td><b>0.520</b></td>
   </tr>
 </table>
 
