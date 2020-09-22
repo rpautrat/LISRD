@@ -84,12 +84,14 @@ def export(images_list, model, checkpoint, keypoints_type,
                 meta_descs[k].squeeze().cpu().numpy())
         descriptors = np.stack(descriptors, axis=1)
         meta_descriptors = np.stack(meta_descriptors, axis=0)
-        grid_points = grid_points.cpu().numpy()
+
+        # Keep the best scores
+        idxs = scores.argsort()[-num_keypoints:]
+
         with open(img_path + extension, 'wb') as output_file:
-            np.savez(output_file, keypoints=keypoints,
-                        descriptors=descriptors, scores=scores,
-                        meta_descriptors=meta_descriptors,
-                        grid_points=grid_points)
+            np.savez(output_file, keypoints=keypoints[idxs],
+                     descriptors=descriptors[idxs], scores=scores[idxs],
+                     meta_descriptors=meta_descriptors)
 
 
 if __name__ == "__main__":

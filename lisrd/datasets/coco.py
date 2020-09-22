@@ -9,8 +9,8 @@ from torch.utils.data import Dataset
 
 from .base_dataset import BaseDataset
 from .utils.data_reader import resize_and_crop
-from .utils.homographies import (sample_homography, warp_points,
-                                 compute_valid_mask, get_keypoints_and_mask)
+from .utils.homographies import (sample_homography, compute_valid_mask,
+                                 get_keypoints_and_mask)
 from .utils.data_augmentation import photometric_augmentation
 
 

@@ -2,13 +2,16 @@
 
 import os
 import numpy as np
-import torch
 import cv2
+import torch
+import torch.nn.functional as F
 from pathlib import Path
 from torch.utils.data import Dataset
 
 from .base_dataset import BaseDataset
 from .utils.data_reader import read_timestamps
+from ..utils.geometry_utils import select_k_best
+from ..utils.pytorch_utils import keypoints_to_grid
 
 
 class Rdnim(BaseDataset):
@@ -31,7 +34,7 @@ class Rdnim(BaseDataset):
             id = seq.stem
             references[id] = str(Path(seq, ref + '.jpg'))
 
-        # Extract the images paths and the homographies
+        # Extract the images paths and homographies
         seq_path = [p for p in Path(root_dir, 'images').iterdir()]
         self._paths = {'test': []}
         for seq in seq_path:
@@ -54,16 +57,6 @@ class _Dataset(Dataset):
     def __init__(self, paths, config):
         self._paths = paths
         self._config = config
-    
-    def _compute_valid_mask(self, H, img_size, erosion_radius=0.):
-        mask = np.ones(img_size, dtype=float)
-        mask = cv2.warpPerspective(mask, H, (img_size[1], img_size[0]),
-                                   flags=cv2.INTER_NEAREST)
-        if erosion_radius > 0:
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,
-                                               (erosion_radius * 2, ) * 2)
-            mask = cv2.erode(mask, kernel)
-        return mask
 
     def __getitem__(self, item):
         img0_path = self._paths[item]['ref']
@@ -77,25 +70,48 @@ class _Dataset(Dataset):
         img1 = img1.astype(float) / 255.
         
         # Compute valid masks
-        H = self._files[item]['H']
+        H = self._paths[item]['H']
         H_inv = np.linalg.inv(H)
-        valid_mask0 = self._compute_valid_mask(H_inv, img_size, 3)
-        valid_mask1 = self._compute_valid_mask(H, img_size, 3)
 
-        img0 = torch.tensor(img0.transpose(2, 0, 1), dtype=torch.float,
-                            device=self._device)
-        img1 = torch.tensor(img1.transpose(2, 0, 1), dtype=torch.float,
-                            device=self._device)
-        H = torch.tensor(H, dtype=torch.float, device=self._device)
-        valid_mask0 = torch.tensor(valid_mask0, dtype=torch.float,
-                                   device=self._device)
-        valid_mask1 = torch.tensor(valid_mask1, dtype=torch.float,
-                                   device=self._device)
-        
-        return {'image0': img0, 'image1': img1, 'homography': H,
-                'valid_mask0': valid_mask0, 'valid_mask1': valid_mask1,
-                'timestamp': self._files[item]['timestamp'],
-                'img0_path': img0_path, 'img1_path': img1_path}
+        # Extract the keypoints and descriptors of each method
+        features = {}
+        for m in self._config['models_name']:
+            features[m] = {}
+            feat0 = np.load(self._paths[item]['ref'] + '.' + m)
+            feat1 = np.load(self._paths[item]['img'] + '.' + m)
+
+            # Extract a fixed number of shared keypoints between the images
+            kp0, mask0 = select_k_best(
+                feat0['keypoints'][:, [1, 0]], feat0['scores'],
+                self._config['num_kp'], H, img_size, margin=3)
+            features[m]['keypoints0'] = kp0
+            kp1, mask1 = select_k_best(
+                feat1['keypoints'][:, [1, 0]], feat1['scores'],
+                self._config['num_kp'], H_inv, img_size, margin=3)
+            features[m]['keypoints1'] = kp1
+
+            # Extract the local descriptors
+            features[m]['descriptors0'] = feat0['descriptors'][mask0]
+            features[m]['descriptors1'] = feat1['descriptors'][mask1]
+
+            # Extract meta descriptors if they exist
+            if 'meta_descriptors' in feat0:
+                meta_desc0_t = torch.tensor(feat0['meta_descriptors'])
+                grid0 = keypoints_to_grid(torch.tensor(kp0),
+                                          img_size).repeat(4, 1, 1, 1)
+                features[m]['meta_descriptors0'] = F.normalize(F.grid_sample(
+                    meta_desc0_t,
+                    grid0).squeeze(3).permute(2, 0, 1), dim=2).numpy()
+                meta_desc1_t = torch.tensor(feat1['meta_descriptors'])
+                grid1 = keypoints_to_grid(torch.tensor(kp1),
+                                          img_size).repeat(4, 1, 1, 1)
+                features[m]['meta_descriptors1'] = F.normalize(F.grid_sample(
+                    meta_desc1_t,
+                    grid1).squeeze(3).permute(2, 0, 1), dim=2).numpy()
+                
+        return {'img0': img0, 'img1': img1, 'img_size': img_size,
+                'timestamp': self._paths[item]['timestamp'],
+                'features': features, 'homography': H}
 
     def __len__(self):
         return len(self._paths)
