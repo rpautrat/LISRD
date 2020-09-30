@@ -2,6 +2,7 @@ numpy
 matplotlib
 torch
 torchvision
+tensorboard
 pyyaml
 pathlib
 opencv-python==3.4.2.17
