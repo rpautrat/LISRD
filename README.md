@@ -42,9 +42,9 @@ We provide two pretrained models:
 
 ### How to use it
 
-We provide a [notebook](notebooks/demo_lisrd.ipynb) showing how to use the trained models of LISRD. Additionally, `lisrd/export_features.yaml` is a script to export the LISRD descriptors with either SIFT or SuperPoint keypoints on a given folder of images. It can be used as follows:
+We provide a [notebook](notebooks/demo_lisrd.ipynb) showing how to use the trained models of LISRD. Additionally, `lisrd/export_features.yaml` is a script to export the LISRD descriptors with either SIFT or SuperPoint keypoints on a given set of images. It can be used as follows:
 ```bash
-python -m lisrd.export_features <path to the folder of images> <name of the model (lisrd or lisrd_sift)> --checkpoint <path to checkpoint> --keypoints <type of keypoints (sift or superpoint)> --num_kp <number of keypoints (default: 2000)>
+python -m lisrd.export_features <path to a txt file listing all your images> <name of the model (lisrd or lisrd_sift)> --checkpoint <path to checkpoint> --keypoints <type of keypoints (sift or superpoint)> --num_kp <number of keypoints (default: 2000)>
 ```
 
 ## Results on the RDNIM dataset
