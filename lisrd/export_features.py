@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 from .models import get_model
 from .models.base_model import Mode
+from .datasets.utils.data_reader import resize_and_crop
 from .utils.pytorch_utils import keypoints_to_grid
 from .models.keypoint_detectors import SIFT_detect, SP_detect, load_SP_net
 
@@ -24,7 +25,8 @@ base_config = {
 
 
 def export(images_list, model, checkpoint, keypoints_type,
-           num_keypoints, detection_thresh, extension):
+           num_keypoints, detection_thresh, extension,
+           resize=False, h=480, w=640):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     config = base_config
     config['name'] = model
@@ -46,6 +48,8 @@ def export(images_list, model, checkpoint, keypoints_type,
     for img_path in tqdm(image_files):
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        if resize:
+            img = resize_and_crop(img, (h, w))
         img_size = img.shape
         if img_size[2] != 3:
             sys.exit('Export only available for RGB images.')
@@ -109,6 +113,12 @@ if __name__ == "__main__":
                          help="Number of keypoints to use.")
     parser.add_argument('--detection_thresh', type=float, default=0.015,
                          help="Detection threshold for SuperPoint.")
+    parser.add_argument('--resize', action='store_true', default=False,
+                        help='Resize the images to a given dimension.')
+    parser.add_argument('--h', type=int, default='480',
+                        help='Image height.')
+    parser.add_argument('--w', type=int, default='640',
+                        help='Image width.')
     parser.add_argument('--extension', type=str, default=None,
                          help="Extension to add to each exported npz.")
     args = parser.parse_args()
@@ -127,4 +137,5 @@ if __name__ == "__main__":
     extension = '.' + extension
 
     export(args.images_list, model, checkpoint, keypoints_type,
-           num_keypoints, args.detection_thresh, extension)
+           num_keypoints, args.detection_thresh, extension,
+           args.resize, args.h, args.w)

@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-from ..datasets.rdnim import Rdnim
+from ..datasets import get_dataset
 from ..datasets.utils.homographies import warp_points
 from ..utils.geometry_utils import get_lisrd_desc_dist_numpy
 
@@ -14,7 +14,8 @@ def run_descriptor_evaluation(config):
     recall = {m: [] for m in models_name}
     mma = {m: [] for m in models_name}
 
-    data_loader = Rdnim(config, 'cpu').get_data_loader('test')
+    dataset = get_dataset(config['name'])(config, 'cpu')
+    data_loader = dataset.get_data_loader('test')
     for x in tqdm(data_loader):
         H = x['homography'][0].numpy()
         features = x['features']
