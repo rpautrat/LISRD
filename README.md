@@ -49,7 +49,7 @@ python -m lisrd.export_features <path to a txt file listing all your images> <na
 
 ## Results on the RDNIM dataset
 
-The Rotated Day-Night Image Matching (RDNIM) dataset originates from the [DNIM dataset](https://www.polybox.ethz.ch/index.php/s/y4LkGlMGV0KiwuO) and has been augmented with homographic warps with 50% of the images including rotations. The images used for evaluation in the paper are available [here](https://www.polybox.ethz.ch/index.php/s/P89YkZyOfdhmdPN).
+The Rotated Day-Night Image Matching (RDNIM) dataset originates from the [DNIM dataset](https://cvg-data.inf.ethz.ch/DNIM/DNIM.zip) and has been augmented with homographic warps with 50% of the images including rotations. The images used for evaluation in the paper are available [here](https://cvg-data.inf.ethz.ch/RDNIM/RDNIM.zip).
 
 Comparison to the state of the art on the RDNIM dataset, using SuperPoint keypoints for all methods and a correctness threshold of 3 pixels:
 
