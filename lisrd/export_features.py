@@ -30,6 +30,7 @@ def export(images_list, model, checkpoint, keypoints_type,
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     config = base_config
     config['name'] = model
+    config['n_kp'] = num_keypoints
 
     # Load the model
     net = get_model(config['name'])(None, config, device)
@@ -78,14 +79,18 @@ def export(images_list, model, checkpoint, keypoints_type,
         
         descs = outputs['descriptors']
         meta_descs = outputs['meta_descriptors']
-        descriptors, meta_descriptors = [], []
-        for k in descs.keys():
-            desc = func.normalize(
-                func.grid_sample(descs[k], grid_points),
-                dim=1).squeeze().cpu().numpy().transpose(1, 0)
-            descriptors.append(desc)
-            meta_descriptors.append(
-                meta_descs[k].squeeze().cpu().numpy())
+        if model == 'lisrd':
+            descriptors, meta_descriptors = [], []
+            for k in descs.keys():
+                desc = func.normalize(
+                    func.grid_sample(descs[k], grid_points),
+                    dim=1).squeeze().cpu().numpy().transpose(1, 0)
+                descriptors.append(desc)
+                meta_descriptors.append(
+                    meta_descs[k].squeeze().cpu().numpy())
+        else:
+            descriptors = [v[0] for v in descs.values()]
+            meta_descriptors = [v[0] for v in meta_descs.values()]
         descriptors = np.stack(descriptors, axis=1)
         meta_descriptors = np.stack(meta_descriptors, axis=0)
 
@@ -124,6 +129,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     model = args.model
+    if model not in ['lisrd', 'lisrd_sift']:
+        raise ValueError(f"Unknown model: {model}")
     checkpoint = os.path.expanduser(args.checkpoint)
     if not os.path.exists(checkpoint):
         sys.exit('Unable to find checkpoint', checkpoint)
