@@ -3,6 +3,7 @@
 import warnings
 warnings.filterwarnings(action='once')
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+from copy import copy
 import cv2
 import numpy as np
 import torch
@@ -45,8 +46,8 @@ class LisrdSiftModule(nn.Module):
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
             img_size = np.array(img.shape[:2])
             tile_size = img_size / tile
-            sift = cv2.xfeatures2d.SIFT_create(nfeatures=self._config['n_kp'],
-                                               contrastThreshold=0.01)
+            sift = cv2.SIFT_create(nfeatures=self._config['n_kp'],
+                                   contrastThreshold=0.01)
             points = sift.detect(img, None)
 
             if len(points) == 0:  # No point detected
@@ -57,7 +58,7 @@ class LisrdSiftModule(nn.Module):
                 continue
 
             for v in self._variances:
-                kp = points.copy()
+                kp = copy(points)
                 if v == 'upright_sift':
                     for k in kp:
                         k.angle = 0.  # Set all orientations to 0

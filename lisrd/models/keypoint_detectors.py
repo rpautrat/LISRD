@@ -8,7 +8,7 @@ from ..third_party.super_point_magic_leap.demo_superpoint import SuperPointFront
 
 def SIFT_detect(img, nfeatures=1500, contrastThreshold=0.04):
     """ Compute SIFT feature points. """
-    sift = cv2.xfeatures2d.SIFT_create(nfeatures=nfeatures,
+    sift = cv2.SIFT_create(nfeatures=nfeatures,
                                        contrastThreshold=contrastThreshold)
     keypoints = sift.detect(img, None)
     keypoints = [[k.pt[1], k.pt[0], k.response] for k in keypoints]
